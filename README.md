@@ -10,6 +10,9 @@ This is not an officially supported feature of the SeedSigner and thus the SeedS
 
 * Brief demonstration [(demo video here)](https://youtu.be/2L99mucvZrg)
 * This coordinator requires opencv-python and qrcode to be installed.  Simply run `pip3 install -r requirements.txt` in the PwmgrCoordinator dir to install them
+* The Password Manager functionality requires pyaes, which is not included in the latest seedsigner-os build.  If you are building a SD card image based on seedsigner-os, you'll need to add a line to `seedsigner-os/opt/[BOARD_TYPE]/configs/[BOARD_TYPE]_defconfig`
+   - For most users this is pi0, so the file to edit is `seedsigner-os/opt/pi0/configs/pi0_defconfig`
+   - Add this line to the end of that file: `BR2_PACKAGE_PYTHON_PYAES=y`
 * An example encrypted data file is included in this repository as encrypted_message.txt
    - The seed used to encrypt/decrypt it is included in example_seed.txt and example_seedqr.png for convenience
 * To create a new PWMgr data - simply go to Tool->Password Manager and select New PWMgr
