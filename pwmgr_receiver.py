@@ -2,6 +2,9 @@
 import cv2 
 import re
 import argparse
+import string
+from binascii import hexlify
+
 
 class BaseQrDecoder:
     def __init__(self):
@@ -13,11 +16,21 @@ class BaseQrDecoder:
     def is_complete(self) -> bool:
         return self.complete
 
-    def add(self, segment, qr_type):
+    def add(self, segment):
         raise Exception("Not implemented in child class")
     
-    def get_qr_data(self) -> dict:
-        raise Exception("get_qr_data must be implemented in decoder child class")
+
+
+class PubkeyQrDecoder:
+
+    def add(self, data):
+        self.qr_data = bytearray()
+        self.qr_data.extend(map(ord, data))
+        self.is_complete = True
+
+    def get_data(self) -> str:
+        return hexlify(self.qr_data).decode()
+
 
 
 class BaseAnimatedQrDecoder(BaseQrDecoder):
@@ -34,7 +47,7 @@ class BaseAnimatedQrDecoder(BaseQrDecoder):
     def parse_segment(self, segment) -> str:
         raise Exception("Not implemented in child class")
     
-    def add(self, segment, qr_type=None):
+    def add(self, segment):
         if self.total_segments == None:
             self.total_segments = self.total_segment_nums(segment)
             self.segments = [None] * self.total_segments
@@ -51,7 +64,7 @@ class BaseAnimatedQrDecoder(BaseQrDecoder):
 
 
 
-class SpecterAnimatedQrDecoder(BaseAnimatedQrDecoder):
+class PwmgrAnimatedQrDecoder(BaseAnimatedQrDecoder):
     """
     """
     def get_data(self) -> str:
@@ -88,7 +101,15 @@ cap = cv2.VideoCapture(0)
 detector = cv2.QRCodeDetector()
 
 
-decoder = SpecterAnimatedQrDecoder()
+decoder = None
+
+def get_decoder(qr_data: bytes):
+    if 33==len(qr_data) and not all(b in string.printable for b in qr_data):
+        print("Interpreting received QR as a binary pubkey")
+        return PubkeyQrDecoder()
+    else:
+        return PwmgrAnimatedQrDecoder()
+    return decoder
 
 font                   = cv2.FONT_HERSHEY_SIMPLEX
 topLeftCornerOfText = (10,20)
@@ -98,30 +119,33 @@ thickness              = 2
 lineType               = 2
 
 while True:
-   _, img = cap.read()
-   text = "Awaiting data" if not decoder.total_segments else str(decoder.collected_segments) + " of " + str(decoder.total_segments)
-   cv2.putText(img,text,
-       topLeftCornerOfText, 
-       font, 
-       fontScale,
-       fontColor,
-       thickness,
-       lineType)
+    _, img = cap.read()
+    if decoder:
+        text = "Awaiting data" if not decoder.total_segments else str(decoder.collected_segments) + " of " + str(decoder.total_segments)
+    else:
+        text = "Awaiting data"
+
+    cv2.putText(img,text,
+        topLeftCornerOfText, 
+        font, 
+        fontScale,
+        fontColor,
+        thickness,
+        lineType)
 
 
-   cv2.imshow("QRCODEscanner", img)     
-   if cv2.waitKey(1) == ord("q"): 
+    cv2.imshow("QRCODEScanner", img)     
+    if cv2.waitKey(1) == ord("q"): 
         break
-   data, bbox, _ = detector.detectAndDecode(img)
-   # check if there is a QRCode in the image
-   if data:
-       decoder.add(data)
-       if decoder.is_complete:
-           break
+    data, bbox, _ = detector.detectAndDecode(img)
+    # check if there is a QRCode in the image
+    if data:
+        if not decoder:
+            decoder = get_decoder(data)
+        decoder.add(data)
+        if decoder.is_complete:
+            break
 
-#cv2.imshow("QRCODEscanner", img)     
-#if cv2.waitKey(1) == ord("q"): 
-    #break
 print("Got data:")
 print(decoder.get_data())
 

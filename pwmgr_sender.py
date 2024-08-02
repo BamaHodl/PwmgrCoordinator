@@ -7,6 +7,7 @@ from PIL import Image
 from pathlib import Path
 import time
 import argparse
+import string
 
 def convert_from_image_to_cv2(img: Image) -> numpy.ndarray:
     open_cv_image = numpy.array(img, dtype=numpy.uint8)
@@ -33,6 +34,15 @@ class BaseQrEncoder:
 
 
 
+@dataclass
+class PubkeyQrEncoder(BaseQrEncoder):
+    qr_data : bytes = None
+
+    def seq_len(self):
+        return 1
+
+    def next_part(self) -> bytes:
+        return self.qr_data
 
 @dataclass
 class BaseSimpleAnimatedQREncoder(BaseQrEncoder):
@@ -116,8 +126,13 @@ parser = argparse.ArgumentParser("pwmgr_sender")
 parser.add_argument('-f', '--file', required=True, type=str)
 args = parser.parse_args()
 
-qr_data = Path(args.file).read_text()
-encoder = PwmgrQrEncoder(qr_data=qr_data)
+input_string = Path(args.file).read_text().strip()
+if 66==len(input_string) and set(input_string).issubset(string.hexdigits):
+    # this is a pubkey
+    encoder = PubkeyQrEncoder(qr_data=bytes.fromhex(input_string))
+    print("Interpreting input as pubkey and sending 33 bytes of binary data")
+else:
+    encoder = PwmgrQrEncoder(qr_data=input_string)
 
 print("Press q in the img window or ctrl-c in the terminal to end...")
 img = encoder.next_part_image()
