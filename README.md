@@ -12,6 +12,8 @@ This is not an officially supported feature of the SeedSigner and thus the SeedS
 * This functionality requires pyaes, which is not included in the latest seedsigner-os.  If you are building a SD card image based on seedsigner-os, you'll need to add a line to `seedsigner-os/opt/[BOARD_TYPE]/configs/[BOARD_TYPE]_defconfig`
    - For most users this is pi0, so the file to edit is `seedsigner-os/opt/pi0/configs/pi0_defconfig`
    - Add this line to the end of that file: `BR2_PACKAGE_PYTHON_PYAES=y`
+* To build the image for pi0 with seedsigner-os and pull from the forked repo branch with this funcionality included, the following should do it:
+   - `SS_ARGS="--pi0 --app-repo='https://github.com/BamaHodl/seedsigner.git' --app-branch='PasswordManager'" docker compose up --force-recreate --build`
 
 ## Coordinator
 * This coordinator requires opencv-python and qrcode to be installed.  Simply run `pip3 install -r requirements.txt` in the PwmgrCoordinator dir to install them
