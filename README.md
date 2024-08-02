@@ -34,6 +34,8 @@ This is not an officially supported feature of the SeedSigner and thus the SeedS
 ## Secure Messenger
 * A pubkey is used to encrypt a message, and only the seed associated with that pubkey can be used to decrypt it
 * The general idea is you export the pubkey from your own seed and share it with your communication partner, and the communication partner exports the pubkey from their seed and shares it with you.  Then you can send messages to them encrypted with their pubkey, and they can send messages to you encrypted with your pubkey.  The encrypted messages can then be sent back and forth across an insecure communication channel without any chance of interception of the decrypted contents since only the seed that exported the pubkey can be used to decrypt the contents.
+* To export the pubkey for a seed, go to Tools->Secure Messenger->Export Pubkey.  Then you can load or select the seed whose pubkey you want to export and it will be displayed on the screen.
+* It can be saved by receiving with the same pwmgr_receiver.py by for example `python3 ./pwmgr_receiver.py -f mypubkey.txt`
 * An example encrypted message data file is included in this repository as encrypted_message.txt
    - The seed used to encrypt/decrypt it is included in example_seed.txt and example_seedqr.png for convenience
 * To load an existing encrypted message, run `pwmgr_sender.py -f <filename>`
